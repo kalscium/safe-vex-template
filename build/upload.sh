@@ -22,7 +22,7 @@ cat > project.pros << EOL
                 "system_files": [],
                 "target": "v5",
                 "user_files": [],
-                "version": "3.3.1"
+                "version": "4.1.0"
             }
         },
         "upload_options": {}

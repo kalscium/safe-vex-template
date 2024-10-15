@@ -3,12 +3,38 @@
 [![License](https://img.shields.io/crates/l/safe-vex.svg)](./LICENSE.md)
 
 # safe-vex
-A safe, reliable and comprehensive wrapper around the vex-rt library that will never panic!
+A modular, safe and data-orientated rust wrapper over the Purdue PROS library for Vex Robotics
 
 ## Disclamer
 `safe-vex` is an open-source community project. `safe-vex` is neither endorsed by or affiliated with Innovation First, Inc. VEX and VEX Robotics are trademarks or service marks of Innovation First, Inc. `safe-vex` is also not developed by the same developers at [vex-rt](https://crates.io/crates/vex-rt) rather it is an independant project.
 
-## Quickstart *(Natively)*
+## Quickstart *(Nix)*
+you will need:
+1. nix
+2. nix flakes
+
+then:
+1. Clone the `safe-vex` project [template](https://github.com/kalscium/safe-vex-template) by running the following command:
+  ```sh
+    git clone https://github.com/kalscium/safe-vex-template.git
+  ```
+2. Enter the newly cloned directory
+3. Enter the *nix* dev-environment with
+  ```sh
+    nix develop
+  ```
+4. Turn on and connect to the vex v5 brain
+5. Give permission to upload code to the robot with: (doesn't matter if this fails)
+  ```sh
+    sudo chmod a+rw /dev/ttyACM0 || sudo chmod a+rw /dev/ttyACM1
+  ```
+6. While connected to the v5 brain run:
+  ```sh
+    cargo run --release
+  ```
+7. Your robot should now be up and running :D
+
+## Quickstart *(Debian)*
 you will need:
 1. A rust toolchain managed by `rustup`:
 2. An `arm-none-eabi` toolchain
@@ -24,44 +50,65 @@ note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 4. The `pros-cli` installed through `pip`
 
 then:
-1. Clone the `safe-vex` project [template](https://github.com/GreenChild04/safe-vex-template) by running the following command:
-```sh
-git clone https://github.com/GreenChild04/safe-vex-template.git
-```
+1. Clone the `safe-vex` project [template](https://github.com/kalscium/safe-vex-template) by running the following command:
+  ```sh
+    git clone https://github.com/kalscium/safe-vex-template.git
+  ```
 2. Enter the newly cloned directory
 3. Turn on and connect to the vex v5 brain
 4. Give permission to upload code to the robot with: (doesn't matter if this fails)
-```sh
-sudo chmod a+rw /dev/ttyACM0 || sudo chmod a+rw /dev/ttyACM1
-```
+  ```sh
+    sudo chmod a+rw /dev/ttyACM0 || sudo chmod a+rw /dev/ttyACM1
+  ```
 5. While connected to the v5 brain run:
-```sh
-cargo run --release
-```
+  ```sh
+    cargo run --release
+  ```
 6. Your robot should now be up and running :D
 
-## Quickstart *(with `Docker`)*
-you will need:
-1. `docker`
-
-then:
-1. Clone the `safe-vex` project [template](https://github.com/GreenChild04/safe-vex-template) by running the following command:
-```sh
-git clone https://github.com/GreenChild04/safe-vex-template.git
-```
-2. Enter the newly cloned directory
-3. Build the docker image with:
-```sh
-docker build -t safe-vex-template
-```
-4. Turn on and connect to the vex v5 brain
-5. Give permission to upload code to the robot with: (doesn't matter if this fails)
-```sh
-sudo chmod a+rw /dev/ttyACM0 || sudo chmod a+rw /dev/ttyACM1
-```
-6. Run the docker container interactively with:
-```sh
-docker run -it --rm --device=/dev/$(ls /dev/ttyACM*) -v .:/project -v $HOME/.cargo/registry:/home/dev/.cargo/registry safe-vex-template
-```
-7. Run `cargo run --release` in the docker container while connected to the v5 brain
-8. Your robot should now be up and running :D
+# Updating the PROS Library Version
+---
+> *(For future reference for the maintainence of this library)*
+To update the pros library version used by `safe-vex`, follow the following steps (with the correct toolchains installed)
+1. Enter the `build` directory of the library
+## *While inside the `build` dir*
+2. Create an empty pros project
+  ```sh
+    pros conductor new kernel
+  ```
+3. Delete the unnecessary bloat libraries and files that are irrelevant to `PROS`
+  ```sh
+    rm -rf kernel/bin kernel/firmware/{okapilib.a,squiggles.mk} kernel/okapi
+  ```
+4. Rename the `project.pros` file to `template.pros` and take note of the version
+  ```sh
+    mv kernel/project.pros kernel/template.pros
+  ```
+  ```json
+    {
+      "py/state": {
+        "templates": {
+          "kernel": {
+            "target": "v5",
+            "version": "<version>, eg 1.0.0 (TAKE NOTE OF THIS FOR LATER STEPS)",
+          }
+        }
+      }
+    }
+  ```
+5. Zip and package the kernel for compilation use
+  ```sh
+    (cd kernel && zip ../kernel@VERSION.zip -r *)
+    rm -rf kernel
+  ```
+6. Update references to the kernel package in bindgen build code (*still in the build dir* `main.rs`)
+  ```rust
+    // Path to PROS release zip (relative to project root)
+    const PROS_ZIP_STR: &str = "build/kernel@VERSION.zip"; // update the vesrion
+  ```
+## *In the project root*
+7. Clean the project and publish it *(given you have changed the project version in `Cargo.toml` to something appropriate to this update to the kernel)*
+  ```sh
+    cargo clean
+    cargo publish
+  ```

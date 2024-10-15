@@ -1,6 +1,10 @@
 #![no_std]
 #![no_main]
 
-use safe_vex_template::bot::MyRobot;
-
-safe_vex::entry!(MyRobot);
+safe_vex::entry! {
+    // declare the opcontrol entrypoint
+    opcontrol: (safe_vex_template::opcontrol::opcontrol);
+    autonomous: (safe_vex_template::autonomous::autonomous);
+    initialize: (safe_vex_template::initialize::initialize);
+    disabled: (safe_vex_template::disabled::disabled);
+}
